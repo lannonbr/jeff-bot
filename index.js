@@ -82,6 +82,10 @@ client.on("ready", async () => {
       description: "Prints out any comics that have new issues out this week",
     });
     await commands.create({
+      name: "print_series",
+      description: "Prints out any comics that we are tracking",
+    });
+    await commands.create({
       name: "add_series",
       description: "Adds a new series to check for updates",
       options: [
@@ -135,6 +139,9 @@ client.on("interactionCreate", async (interaction) => {
     }
 
     interaction.reply({ content: msg.join("\n") });
+  } else if (interaction.commandName == "print_series") {
+    const msg = printSeriesList();
+    interaction.reply({ content: msg });
   } else if (interaction.commandName == "add_series") {
     const seriesId = interaction.options.getString("series_id");
     const seriesName = interaction.options.getString("series_name");
@@ -182,6 +189,14 @@ async function getComics() {
   }
 
   return comics;
+}
+
+function printSeriesList() {
+  let msg = [];
+  for (let { id, name } of series) {
+    msg.push(`Series: ${name} ID: ${id}`);
+  }
+  return msg.join("\n");
 }
 
 function addSeries(id, name) {
