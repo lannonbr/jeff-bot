@@ -3,9 +3,15 @@ const dayjs = require("dayjs");
 const LocalizedFormat = require("dayjs/plugin/localizedFormat");
 dayjs.extend(LocalizedFormat);
 const { CronJob } = require("cron");
-const { Client, GatewayIntentBits, MessageFlags } = require("discord.js");
+const {
+  Client,
+  GatewayIntentBits,
+  MessageFlags,
+  ApplicationCommandOptionType,
+} = require("discord.js");
+const fs = require("fs");
 
-const series = require("./series.json");
+let series = require("./series.json");
 
 require("dotenv").config();
 
@@ -75,6 +81,36 @@ client.on("ready", async () => {
       name: "comics_this_week",
       description: "Prints out any comics that have new issues out this week",
     });
+    await commands.create({
+      name: "add_series",
+      description: "Adds a new series to check for updates",
+      options: [
+        {
+          name: "series_id",
+          description: "The ID of the series to add",
+          type: ApplicationCommandOptionType.String,
+          required: true,
+        },
+        {
+          name: "series_name",
+          description: "The name of the series to add",
+          type: ApplicationCommandOptionType.String,
+          required: true,
+        },
+      ],
+    });
+    await commands.create({
+      name: "remove_series",
+      description: "Removes a series from the list",
+      options: [
+        {
+          name: "series_id",
+          description: "The ID of the series to remove",
+          type: ApplicationCommandOptionType.String,
+          required: true,
+        },
+      ],
+    });
   }
 });
 
@@ -99,6 +135,23 @@ client.on("interactionCreate", async (interaction) => {
     }
 
     interaction.reply({ content: msg.join("\n") });
+  } else if (interaction.commandName == "add_series") {
+    const seriesId = interaction.options.getString("series_id");
+    const seriesName = interaction.options.getString("series_name");
+
+    addSeries(parseInt(seriesId), seriesName);
+
+    interaction.reply({
+      content: `Added series ${seriesName} with id ${seriesId}`,
+    });
+  } else if (interaction.commandName == "remove_series") {
+    const seriesId = interaction.options.getString("series_id");
+
+    removeSeries(parseInt(seriesId));
+
+    interaction.reply({
+      content: `Removed series with id ${seriesId}`,
+    });
   }
 });
 
@@ -129,6 +182,16 @@ async function getComics() {
   }
 
   return comics;
+}
+
+function addSeries(id, name) {
+  series.push({ id, name });
+  fs.writeFileSync("./series.json", JSON.stringify(series));
+}
+
+function removeSeries(id) {
+  series = series.filter((s) => s.id !== id);
+  fs.writeFileSync("./series.json", JSON.stringify(series));
 }
 
 client.login(process.env.JEFFBOT_DISCORD_TOKEN);
