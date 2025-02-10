@@ -120,6 +120,7 @@ client.on("ready", async () => {
 
 client.on("interactionCreate", async (interaction) => {
   if (interaction.commandName == "comics_this_week") {
+    await interaction.deferReply();
     const comics = await getComics();
 
     let msg = [];
@@ -138,7 +139,7 @@ client.on("interactionCreate", async (interaction) => {
       msg.push(`${comic.title} is out ${onSaleDate.format("LL")}`);
     }
 
-    interaction.reply({ content: msg.join("\n") });
+    interaction.editReply({ content: msg.join("\n") });
   } else if (interaction.commandName == "print_series") {
     const msg = printSeriesList();
     interaction.reply({ content: msg });
