@@ -19,6 +19,16 @@ require("dotenv").config();
 const pubKey = process.env.MARVEL_PUB_KEY;
 const privKey = process.env.MARVEL_PRIV_KEY;
 
+const client = new Client({
+  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages],
+});
+
+const guildId = process.env.GUILD_ID;
+if (guildId === undefined) {
+  console.error("Guild ID environment variable (GUILD_ID) not provided");
+  process.exit(1);
+}
+
 let jobs = [];
 
 async function scheduleCronJob() {
@@ -30,7 +40,7 @@ async function scheduleCronJob() {
   let job = new CronJob(
     "0 7 * * *",
     async function () {
-      const guild = client.guilds.cache.get(waaGuildId);
+      const guild = client.guilds.cache.get(guildId);
 
       const channelId = process.env.CHANNEL_ID;
       const channel = await guild.channels.fetch(channelId);
@@ -57,16 +67,6 @@ async function scheduleCronJob() {
   );
 
   jobs.push(job);
-}
-
-const client = new Client({
-  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages],
-});
-
-const guildId = process.env.GUILD_ID;
-if (guildId === undefined) {
-  console.error("Guild ID environment variable (GUILD_ID) not provided");
-  process.exit(1);
 }
 
 client.on("ready", async () => {
@@ -122,6 +122,7 @@ client.on("ready", async () => {
 
 client.on("interactionCreate", async (interaction) => {
   if (interaction.commandName == "comics_this_week") {
+    await interaction.deferReply();
     const comics = await getComics();
 
     let msg = [];
@@ -137,7 +138,7 @@ client.on("interactionCreate", async (interaction) => {
       embeds.push(createEmbedFromComic(comic));
     }
 
-    interaction.reply({ content: msg.join("\n"), embeds: embeds });
+    interaction.editReply({ content: msg.join("\n"), embeds: embeds });
   } else if (interaction.commandName == "print_series") {
     const msg = printSeriesList();
     interaction.reply({ content: msg });
@@ -216,7 +217,7 @@ async function getSeries(id, dateDescriptor) {
   if (resp.data.count > 0) {
     return resp.data.results[0];
   } else {
-    console.error("No results for this series this week");
+    console.error("No results this week for series: " + name);
     return null;
   }
 }
@@ -224,8 +225,8 @@ async function getSeries(id, dateDescriptor) {
 async function getComics() {
   let comics = [];
 
-  for (let { id } of series) {
-    const data = await getSeries(id, "thisWeek");
+  for (let { id, name } of series) {
+    const data = await getSeries(id, name, "thisWeek");
 
     if (data != null) {
       comics.push(data);
