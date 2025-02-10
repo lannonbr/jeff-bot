@@ -3,6 +3,7 @@ const dayjs = require("dayjs");
 const LocalizedFormat = require("dayjs/plugin/localizedFormat");
 dayjs.extend(LocalizedFormat);
 const { CronJob } = require("cron");
+const { EmbedBuilder } = require('discord.js');
 const {
   Client,
   GatewayIntentBits,
@@ -40,10 +41,11 @@ async function scheduleCronJob() {
         const onSaleDate = dayjs(
           comic.dates.find((date) => date.type === "onsaleDate").date
         );
-
+        const embed = createEmbedFromComic(comic);
         if (onSaleDate.format("LL") == dayjs().format("LL")) {
           await channel.send({
-            content: `${comic.title} is out today`,
+            content: `# ${comic.title} is out today`,
+            embeds: [embed]
           });
         }
       }
@@ -123,22 +125,19 @@ client.on("interactionCreate", async (interaction) => {
     const comics = await getComics();
 
     let msg = [];
+    let embeds = [];
 
     if (comics.length > 0) {
-      msg.push(`Comics out this week:`);
+      msg.push(`# Comics out this week:`);
     } else {
       msg.push(`No comics are out this week`);
     }
 
     for (let comic of comics) {
-      const onSaleDate = dayjs(
-        comic.dates.find((date) => date.type === "onsaleDate").date
-      );
-
-      msg.push(`${comic.title} is out ${onSaleDate.format("LL")}`);
+      embeds.push(createEmbedFromComic(comic));
     }
 
-    interaction.reply({ content: msg.join("\n") });
+    interaction.reply({ content: msg.join("\n"), embeds: embeds });
   } else if (interaction.commandName == "print_series") {
     const msg = printSeriesList();
     interaction.reply({ content: msg });
@@ -161,6 +160,51 @@ client.on("interactionCreate", async (interaction) => {
     });
   }
 });
+
+function createEmbedFromComic(comic) {
+  const embed = new EmbedBuilder()
+    .setAuthor({
+      name: "New Comic Release",
+      iconURL: "https://cdn-icons-png.flaticon.com/512/5619/5619623.png",
+    })
+    .setTitle(comic.title)
+    .setURL(comic.urls.find(url => url.type === 'detail').url)
+    .addFields(
+      {
+        name: "Release Date",
+        value: `${dayjs(comic.dates.find((date) => date.type === "onsaleDate").date).format("LL")}`,
+        inline: false
+      },
+      {
+        name: "Writer",
+        value: `${comic.creators.items.find(item => item.role === 'writer').name}`,
+        inline: true
+      },
+      {
+        name: "Penciller",
+        value: `${comic.creators.items.find(item => item.role === 'inker').name}`,
+        inline: true
+      },
+      {
+        name: "Cover Artist",
+        value: `${comic.creators.items.find(item => item.role === 'penciler (cover)').name}`,
+        inline: true
+      },
+      {
+        name: "Description",
+        value: `${comic.description}`,
+        inline: true
+      },
+    )
+    .setImage(comic.thumbnail.path + `/portrait_uncanny.jpg`)
+    .setColor("#6a97c8")
+    .setFooter({
+      text: "Update",
+    })
+    .setTimestamp();
+
+  return embed;
+}
 
 async function getSeries(id, dateDescriptor) {
   const ts = dayjs().unix().toString();
@@ -186,6 +230,7 @@ async function getComics() {
     if (data != null) {
       comics.push(data);
     }
+    console.log(JSON.stringify(data, null, 2));
   }
 
   return comics;
