@@ -163,7 +163,7 @@ client.on("interactionCreate", async (interaction) => {
   }
 });
 
-async function getSeries(id, dateDescriptor) {
+async function getSeries(id, name, dateDescriptor) {
   const ts = dayjs().unix().toString();
   const hash = crypto.hash("md5", ts + privKey + pubKey);
 
@@ -173,7 +173,7 @@ async function getSeries(id, dateDescriptor) {
   if (resp.data.count > 0) {
     return resp.data.results[0];
   } else {
-    console.error("No results for this series this week");
+    console.error("No results this week for series: " + name);
     return null;
   }
 }
@@ -181,8 +181,8 @@ async function getSeries(id, dateDescriptor) {
 async function getComics() {
   let comics = [];
 
-  for (let { id } of series) {
-    const data = await getSeries(id, "thisWeek");
+  for (let { id, name } of series) {
+    const data = await getSeries(id, name, "thisWeek");
 
     if (data != null) {
       comics.push(data);
