@@ -18,6 +18,16 @@ require("dotenv").config();
 const pubKey = process.env.MARVEL_PUB_KEY;
 const privKey = process.env.MARVEL_PRIV_KEY;
 
+const client = new Client({
+  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages],
+});
+
+const guildId = process.env.GUILD_ID;
+if (guildId === undefined) {
+  console.error("Guild ID environment variable (GUILD_ID) not provided");
+  process.exit(1);
+}
+
 let jobs = [];
 
 async function scheduleCronJob() {
@@ -29,7 +39,7 @@ async function scheduleCronJob() {
   let job = new CronJob(
     "0 7 * * *",
     async function () {
-      const guild = client.guilds.cache.get(waaGuildId);
+      const guild = client.guilds.cache.get(guildId);
 
       const channelId = process.env.CHANNEL_ID;
       const channel = await guild.channels.fetch(channelId);
@@ -55,16 +65,6 @@ async function scheduleCronJob() {
   );
 
   jobs.push(job);
-}
-
-const client = new Client({
-  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages],
-});
-
-const guildId = process.env.GUILD_ID;
-if (guildId === undefined) {
-  console.error("Guild ID environment variable (GUILD_ID) not provided");
-  process.exit(1);
 }
 
 client.on("ready", async () => {
