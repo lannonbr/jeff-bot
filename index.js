@@ -207,7 +207,7 @@ function createEmbedFromComic(comic) {
   return embed;
 }
 
-async function getSeries(id, dateDescriptor) {
+async function getSeries(id, name, dateDescriptor) {
   const ts = dayjs().unix().toString();
   const hash = crypto.hash("md5", ts + privKey + pubKey);
 
