@@ -3,7 +3,7 @@ const dayjs = require("dayjs");
 const LocalizedFormat = require("dayjs/plugin/localizedFormat");
 dayjs.extend(LocalizedFormat);
 const { CronJob } = require("cron");
-const { EmbedBuilder } = require('discord.js');
+const { EmbedBuilder, ButtonBuilder, ButtonStyle, ActionRowBuilder, ComponentType } = require('discord.js');
 const {
   Client,
   GatewayIntentBits,
@@ -51,7 +51,7 @@ async function scheduleCronJob() {
         const onSaleDate = dayjs(
           comic.dates.find((date) => date.type === "onsaleDate").date
         );
-        const embed = createEmbedFromComic(comic);
+        const embed = createEmbedFromComic(comic, true);
         if (onSaleDate.format("LL") == dayjs().format("LL")) {
           await channel.send({
             content: `# ${comic.title} is out today`,
@@ -120,25 +120,79 @@ client.on("ready", async () => {
   }
 });
 
+function generateActionRow(backDisabled, forwardDisabled, pageNum, numComics) {
+  const back = new ButtonBuilder()
+    .setCustomId('back')
+    .setLabel('◀')
+    .setStyle(ButtonStyle.Primary)
+    .setDisabled(backDisabled);
+  const paginator = new ButtonBuilder()
+    .setCustomId('paginator')
+    .setLabel(`Comic ${pageNum} of ${numComics}`)
+    .setStyle(ButtonStyle.Secondary)
+    .setDisabled(true);
+  const forward = new ButtonBuilder()
+    .setCustomId('forward')
+    .setLabel('▶')
+    .setStyle(ButtonStyle.Primary)
+    .setDisabled(forwardDisabled);
+  const row = new ActionRowBuilder()
+    .addComponents(back, paginator, forward);
+
+  return row;
+}
+
 client.on("interactionCreate", async (interaction) => {
   if (interaction.commandName == "comics_this_week") {
     await interaction.deferReply();
     const comics = await getComics();
 
     let msg = [];
-    let embeds = [];
 
-    if (comics.length > 0) {
-      msg.push(`# Comics out this week:`);
+    if (comics.length == 0) {
+      msg.push(`No comics are coming out this week.`);
+      await interaction.editReply({ content: msg.join("\n") });
     } else {
-      msg.push(`No comics are out this week`);
+      let i = 0;
+      const row = generateActionRow(true, false, 1, comics.length);
+
+      const response = await interaction.editReply({
+        embeds: [createEmbedFromComic(comics[i], false)],
+        components: [row],
+        fetchReply: true 
+      });
+
+      const collector = await response.createMessageComponentCollector({
+        componentType: ComponentType.Button,
+        time: 120000
+      });
+
+      collector.on('collect', async c => {
+        if (c.customId === 'back') {
+          i--;
+          await c.update({
+            embeds: [createEmbedFromComic(comics[i], false)],
+            components: [generateActionRow(i==0, false, i+1, comics.length)]
+          });
+        } else if (c.customId === 'forward') {
+          i++;
+          await c.update({
+            embeds: [createEmbedFromComic(comics[i], false)],
+            components: [generateActionRow(false, i==comics.length-1, i+1, comics.length)]
+          });
+        }
+
+        collector.resetTimer();
+      });
+
+      collector.on('end', async () => {
+        await interaction.editReply({
+          embeds: [createEmbedFromComic(comics[i], false)],
+          components: [generateActionRow(true, true, i+1, comics.length)] 
+        });
+      });
     }
 
-    for (let comic of comics) {
-      embeds.push(createEmbedFromComic(comic));
-    }
-
-    interaction.editReply({ content: msg.join("\n"), embeds: embeds });
   } else if (interaction.commandName == "print_series") {
     const msg = printSeriesList();
     interaction.reply({ content: msg });
@@ -162,10 +216,10 @@ client.on("interactionCreate", async (interaction) => {
   }
 });
 
-function createEmbedFromComic(comic) {
+function createEmbedFromComic(comic, isNotification) {
   const embed = new EmbedBuilder()
     .setAuthor({
-      name: "New Comic Release",
+      name: isNotification ? "New Comic Release" : "Comics Out This Week",
       iconURL: "https://cdn-icons-png.flaticon.com/512/5619/5619623.png",
     })
     .setTitle(comic.title)
