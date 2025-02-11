@@ -13,12 +13,11 @@ const {
 const {
   Client,
   GatewayIntentBits,
-  MessageFlags,
   ApplicationCommandOptionType,
 } = require("discord.js");
 const fs = require("fs");
 
-let series = require("./series.json");
+let series = require("./data/series.json");
 
 require("dotenv").config();
 

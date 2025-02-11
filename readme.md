@@ -27,7 +27,7 @@ Create a .env file and add the following fields
 - `GUILD_ID`: ID of discord server you are running this on
 - `CHANNEL_ID`: ID of the channel that will post automatic notifications of new releases
 
-Also, create a `series.json` file that will list the IDs for each series. If you go to a series from this page: [https://www.marvel.com/comics/series](https://www.marvel.com/comics/series), the series ID will be in the URL.
+Also, create a file at `data/series.json` file that will list the IDs for each series. If you go to a series from this page: [https://www.marvel.com/comics/series](https://www.marvel.com/comics/series), the series ID will be in the URL.
 
 For example:
 

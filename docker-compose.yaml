@@ -1,0 +1,7 @@
+services:
+  jeffbot:
+    image: ghcr.io/lannonbr/jeff-bot:main
+    volumes:
+      - "./data:/opt/data"
+    env_file: .env
+    restart: unless-stopped
