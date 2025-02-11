@@ -150,7 +150,8 @@ client.on("interactionCreate", async (interaction) => {
     let msg = [];
 
     if (comics.length == 0) {
-      msg.push(`No comics are out this week`);
+      msg.push(`No comics are coming out this week.`);
+      await interaction.editReply({ content: msg.join("\n") });
     } else {
       let i = 0;
       const row = generateActionRow(true, false, 1, comics.length);
@@ -191,7 +192,7 @@ client.on("interactionCreate", async (interaction) => {
         });
       });
     }
-    
+
   } else if (interaction.commandName == "print_series") {
     const msg = printSeriesList();
     interaction.reply({ content: msg });
