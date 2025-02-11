@@ -151,47 +151,47 @@ client.on("interactionCreate", async (interaction) => {
 
     if (comics.length == 0) {
       msg.push(`No comics are out this week`);
-    }
+    } else {
+      let i = 0;
+      const row = generateActionRow(true, false, 1, comics.length);
 
-    let i = 0;
-    const row = generateActionRow(true, false, 1, comics.length);
-
-    const response = await interaction.editReply({
-      embeds: [createEmbedFromComic(comics[i], false)],
-      components: [row],
-      fetchReply: true 
-    });
-
-    const collector = await response.createMessageComponentCollector({
-      componentType: ComponentType.Button,
-      time: 120000
-    });
-
-    collector.on('collect', async c => {
-      if (c.customId === 'back') {
-        i--;
-        await c.update({
-          embeds: [createEmbedFromComic(comics[i], false)],
-          components: [generateActionRow(i==0, false, i+1, comics.length)]
-        });
-      } else if (c.customId === 'forward') {
-        i++;
-        await c.update({
-          embeds: [createEmbedFromComic(comics[i], false)],
-          components: [generateActionRow(false, i==comics.length-1, i+1, comics.length)]
-        });
-      }
-
-      collector.resetTimer();
-    });
-
-    collector.on('end', async () => {
-      await interaction.editReply({
+      const response = await interaction.editReply({
         embeds: [createEmbedFromComic(comics[i], false)],
-        components: [generateActionRow(true, true, i+1, comics.length)] 
+        components: [row],
+        fetchReply: true 
       });
-    });
 
+      const collector = await response.createMessageComponentCollector({
+        componentType: ComponentType.Button,
+        time: 120000
+      });
+
+      collector.on('collect', async c => {
+        if (c.customId === 'back') {
+          i--;
+          await c.update({
+            embeds: [createEmbedFromComic(comics[i], false)],
+            components: [generateActionRow(i==0, false, i+1, comics.length)]
+          });
+        } else if (c.customId === 'forward') {
+          i++;
+          await c.update({
+            embeds: [createEmbedFromComic(comics[i], false)],
+            components: [generateActionRow(false, i==comics.length-1, i+1, comics.length)]
+          });
+        }
+
+        collector.resetTimer();
+      });
+
+      collector.on('end', async () => {
+        await interaction.editReply({
+          embeds: [createEmbedFromComic(comics[i], false)],
+          components: [generateActionRow(true, true, i+1, comics.length)] 
+        });
+      });
+    }
+    
   } else if (interaction.commandName == "print_series") {
     const msg = printSeriesList();
     interaction.reply({ content: msg });
