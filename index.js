@@ -284,7 +284,6 @@ async function getComics() {
     if (data != null) {
       comics.push(data);
     }
-    console.log(JSON.stringify(data, null, 2));
   }
 
   return comics;
