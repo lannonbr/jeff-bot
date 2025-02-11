@@ -3,7 +3,13 @@ const dayjs = require("dayjs");
 const LocalizedFormat = require("dayjs/plugin/localizedFormat");
 dayjs.extend(LocalizedFormat);
 const { CronJob } = require("cron");
-const { EmbedBuilder, ButtonBuilder, ButtonStyle, ActionRowBuilder, ComponentType } = require('discord.js');
+const {
+  EmbedBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+  ActionRowBuilder,
+  ComponentType,
+} = require("discord.js");
 const {
   Client,
   GatewayIntentBits,
@@ -55,7 +61,7 @@ async function scheduleCronJob() {
         if (onSaleDate.format("LL") == dayjs().format("LL")) {
           await channel.send({
             content: `# ${comic.title} is out today`,
-            embeds: [embed]
+            embeds: [embed],
           });
         }
       }
@@ -122,22 +128,21 @@ client.on("ready", async () => {
 
 function generateActionRow(backDisabled, forwardDisabled, pageNum, numComics) {
   const back = new ButtonBuilder()
-    .setCustomId('back')
-    .setLabel('◀')
+    .setCustomId("back")
+    .setLabel("◀")
     .setStyle(ButtonStyle.Primary)
     .setDisabled(backDisabled);
   const paginator = new ButtonBuilder()
-    .setCustomId('paginator')
+    .setCustomId("paginator")
     .setLabel(`Comic ${pageNum} of ${numComics}`)
     .setStyle(ButtonStyle.Secondary)
     .setDisabled(true);
   const forward = new ButtonBuilder()
-    .setCustomId('forward')
-    .setLabel('▶')
+    .setCustomId("forward")
+    .setLabel("▶")
     .setStyle(ButtonStyle.Primary)
     .setDisabled(forwardDisabled);
-  const row = new ActionRowBuilder()
-    .addComponents(back, paginator, forward);
+  const row = new ActionRowBuilder().addComponents(back, paginator, forward);
 
   return row;
 }
@@ -159,40 +164,48 @@ client.on("interactionCreate", async (interaction) => {
       const response = await interaction.editReply({
         embeds: [createEmbedFromComic(comics[i], false)],
         components: [row],
-        fetchReply: true 
+        withResponse: true,
       });
 
       const collector = await response.createMessageComponentCollector({
         componentType: ComponentType.Button,
-        time: 120000
+        time: 120000,
       });
 
-      collector.on('collect', async c => {
-        if (c.customId === 'back') {
+      collector.on("collect", async (c) => {
+        if (c.customId === "back") {
           i--;
           await c.update({
             embeds: [createEmbedFromComic(comics[i], false)],
-            components: [generateActionRow(i==0, false, i+1, comics.length)]
+            components: [
+              generateActionRow(i == 0, false, i + 1, comics.length),
+            ],
           });
-        } else if (c.customId === 'forward') {
+        } else if (c.customId === "forward") {
           i++;
           await c.update({
             embeds: [createEmbedFromComic(comics[i], false)],
-            components: [generateActionRow(false, i==comics.length-1, i+1, comics.length)]
+            components: [
+              generateActionRow(
+                false,
+                i == comics.length - 1,
+                i + 1,
+                comics.length
+              ),
+            ],
           });
         }
 
         collector.resetTimer();
       });
 
-      collector.on('end', async () => {
+      collector.on("end", async () => {
         await interaction.editReply({
           embeds: [createEmbedFromComic(comics[i], false)],
-          components: [generateActionRow(true, true, i+1, comics.length)] 
+          components: [generateActionRow(true, true, i + 1, comics.length)],
         });
       });
     }
-
   } else if (interaction.commandName == "print_series") {
     const msg = printSeriesList();
     interaction.reply({ content: msg });
@@ -223,33 +236,42 @@ function createEmbedFromComic(comic, isNotification) {
       iconURL: "https://cdn-icons-png.flaticon.com/512/5619/5619623.png",
     })
     .setTitle(comic.title)
-    .setURL(comic.urls.find(url => url.type === 'detail').url)
+    .setURL(comic.urls.find((url) => url.type === "detail").url)
     .addFields(
       {
         name: "Release Date",
-        value: `${dayjs(comic.dates.find((date) => date.type === "onsaleDate").date).format("LL")}`,
-        inline: false
+        value: `${dayjs(
+          comic.dates.find((date) => date.type === "onsaleDate").date
+        ).format("LL")}`,
+        inline: false,
       },
       {
         name: "Writer",
-        value: `${comic.creators.items.find(item => item.role === 'writer').name}`,
-        inline: true
+        value: `${
+          comic.creators.items.find((item) => item.role === "writer").name
+        }`,
+        inline: true,
       },
       {
         name: "Penciller",
-        value: `${comic.creators.items.find(item => item.role === 'inker').name}`,
-        inline: true
+        value: `${
+          comic.creators.items.find((item) => item.role === "inker").name
+        }`,
+        inline: true,
       },
       {
         name: "Cover Artist",
-        value: `${comic.creators.items.find(item => item.role === 'penciler (cover)').name}`,
-        inline: true
+        value: `${
+          comic.creators.items.find((item) => item.role === "penciler (cover)")
+            .name
+        }`,
+        inline: true,
       },
       {
         name: "Description",
         value: `${comic.description}`,
-        inline: true
-      },
+        inline: true,
+      }
     )
     .setImage(comic.thumbnail.path + `/portrait_uncanny.jpg`)
     .setColor("#6a97c8")
