@@ -67,7 +67,7 @@ async function scheduleCronJob() {
     },
     null,
     true,
-    Intl.DateTimeFormat().resolvedOptions().timeZone,
+    "America/New_York",
     { client }
   );
 
