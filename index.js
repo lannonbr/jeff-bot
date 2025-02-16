@@ -230,6 +230,11 @@ client.on("interactionCreate", async (interaction) => {
   }
 });
 
+/**
+ * Checks if a series is valid
+ * @param {Number} seriesId
+ * @returns the series object if valid, null otherwise
+ */
 async function checkSeries(seriesId) {
   const ts = dayjs().unix().toString();
   const hash = crypto.hash("md5", ts + privKey + pubKey);
@@ -302,7 +307,14 @@ function createEmbedFromComic(comic, isNotification) {
   return embed;
 }
 
-async function getSeries(id, name, dateDescriptor) {
+/**
+ *
+ * @param {Number} id - Series ID
+ * @param {String} name - Series Name
+ * @param {String} dateDescriptor - Time window for comics, can be "lastWeek", "thisWeek", "nextWeek", or "thisMonth""
+ * @returns the listing of comics if any, null otherwise
+ */
+async function getComicsForSeries(id, name, dateDescriptor) {
   const ts = dayjs().unix().toString();
   const hash = crypto.hash("md5", ts + privKey + pubKey);
 
@@ -321,7 +333,7 @@ async function getComics() {
   let comics = [];
 
   for (let { id, name } of series) {
-    const data = await getSeries(id, name, "thisWeek");
+    const data = await getComicsForSeries(id, name, "thisWeek");
 
     if (data != null) {
       comics.push(data);
