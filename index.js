@@ -102,12 +102,6 @@ client.on("ready", async () => {
           type: ApplicationCommandOptionType.String,
           required: true,
         },
-        {
-          name: "series_name",
-          description: "The name of the series to add",
-          type: ApplicationCommandOptionType.String,
-          required: true,
-        },
       ],
     });
     await commands.create({
@@ -209,14 +203,22 @@ client.on("interactionCreate", async (interaction) => {
     const msg = printSeriesList();
     interaction.reply({ content: msg });
   } else if (interaction.commandName == "add_series") {
+    await interaction.deferReply();
     const seriesId = interaction.options.getString("series_id");
-    const seriesName = interaction.options.getString("series_name");
 
-    addSeries(parseInt(seriesId), seriesName);
+    let series = await checkSeries(seriesId);
 
-    interaction.reply({
-      content: `Added series ${seriesName} with id ${seriesId}`,
-    });
+    if (series !== null) {
+      addSeries(parseInt(seriesId), series.title);
+
+      await interaction.editReply({
+        content: `Added series ${series.title} with id ${seriesId}`,
+      });
+    } else {
+      await interaction.editReply({
+        content: `Series ${seriesId} is not a valid series`,
+      });
+    }
   } else if (interaction.commandName == "remove_series") {
     const seriesId = interaction.options.getString("series_id");
 
@@ -227,6 +229,23 @@ client.on("interactionCreate", async (interaction) => {
     });
   }
 });
+
+async function checkSeries(seriesId) {
+  const ts = dayjs().unix().toString();
+  const hash = crypto.hash("md5", ts + privKey + pubKey);
+
+  const resp = await fetch(
+    `https://gateway.marvel.com/v1/public/series/${seriesId}?ts=${ts}&apikey=${pubKey}&hash=${hash}`
+  ).then((resp) => resp.json());
+
+  if (resp.code == 404) {
+    return null;
+  } else if (resp.code == 200) {
+    return resp.data.results[0];
+  } else {
+    return null;
+  }
+}
 
 function createEmbedFromComic(comic, isNotification) {
   const embed = new EmbedBuilder()
@@ -254,7 +273,8 @@ function createEmbedFromComic(comic, isNotification) {
       {
         name: "Penciller",
         value: `${
-          comic.creators.items.find((item) => item.role === "inker").name
+          comic.creators.items.find((item) => item.role === "inker")?.name ??
+          "No penciler"
         }`,
         inline: true,
       },
@@ -321,12 +341,12 @@ function printSeriesList() {
 
 function addSeries(id, name) {
   series.push({ id, name });
-  fs.writeFileSync("./series.json", JSON.stringify(series));
+  fs.writeFileSync("./data/series.json", JSON.stringify(series));
 }
 
 function removeSeries(id) {
   series = series.filter((s) => s.id !== id);
-  fs.writeFileSync("./series.json", JSON.stringify(series));
+  fs.writeFileSync("./data/series.json", JSON.stringify(series));
 }
 
 client.login(process.env.JEFFBOT_DISCORD_TOKEN);

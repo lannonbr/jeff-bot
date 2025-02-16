@@ -1,0 +1,7 @@
+# 1.0.1 - Feb 16, 2025
+
+- refactor: updated add_series slash command to verify that provided ID is an actual series
+
+# 1.0.0 - Feb 11, 2025
+
+- Original Release
