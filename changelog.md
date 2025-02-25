@@ -1,3 +1,7 @@
+# 1.0.2 - Feb 24, 2025
+
+- refactor: tweak embed to not include fields if not found in API
+
 # 1.0.1 - Feb 16, 2025
 
 - refactor: updated add_series slash command to verify that provided ID is an actual series

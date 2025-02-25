@@ -253,50 +253,63 @@ async function checkSeries(seriesId) {
 }
 
 function createEmbedFromComic(comic, isNotification) {
-  const embed = new EmbedBuilder()
+  let embed = new EmbedBuilder()
     .setAuthor({
       name: isNotification ? "New Comic Release" : "Comics Out This Week",
       iconURL: "https://cdn-icons-png.flaticon.com/512/5619/5619623.png",
     })
     .setTitle(comic.title)
     .setURL(comic.urls.find((url) => url.type === "detail").url)
-    .addFields(
-      {
-        name: "Release Date",
-        value: `${dayjs(
-          comic.dates.find((date) => date.type === "onsaleDate").date
-        ).format("LL")}`,
-        inline: false,
-      },
-      {
-        name: "Writer",
-        value: `${
-          comic.creators.items.find((item) => item.role === "writer").name
-        }`,
-        inline: true,
-      },
-      {
-        name: "Penciller",
-        value: `${
-          comic.creators.items.find((item) => item.role === "inker")?.name ??
-          "No penciler"
-        }`,
-        inline: true,
-      },
-      {
-        name: "Cover Artist",
-        value: `${
-          comic.creators.items.find((item) => item.role === "penciler (cover)")
-            .name
-        }`,
-        inline: true,
-      },
-      {
-        name: "Description",
-        value: `${comic.description}`,
-        inline: true,
-      }
-    )
+    .addFields({
+      name: "Release Date",
+      value: `${dayjs(
+        comic.dates.find((date) => date.type === "onsaleDate").date
+      ).format("LL")}`,
+      inline: false,
+    });
+
+  let possibleWriter = comic.creators.items.find(
+    (item) => item.role === "writer"
+  );
+
+  if (possibleWriter != undefined) {
+    embed = embed.addFields({
+      name: "Writer",
+      value: possibleWriter.name,
+      inline: true,
+    });
+  }
+
+  let possiblePenciller = comic.creators.items.find(
+    (item) => item.role === "inker"
+  );
+
+  if (possiblePenciller != undefined) {
+    embed = embed.addFields({
+      name: "Penciller",
+      value: possiblePenciller.name,
+      inline: true,
+    });
+  }
+
+  let possibleCoverArtist = comic.creators.items.find(
+    (item) => item.role === "penciler (cover)"
+  );
+
+  if (possibleCoverArtist != undefined) {
+    embed = embed.addFields({
+      name: "Cover Artist",
+      value: possibleCoverArtist.name,
+      inline: true,
+    });
+  }
+
+  embed = embed
+    .addFields({
+      name: "Description",
+      value: `${comic.description}`,
+      inline: false,
+    })
     .setImage(comic.thumbnail.path + `/portrait_uncanny.jpg`)
     .setColor("#6a97c8")
     .setFooter({
