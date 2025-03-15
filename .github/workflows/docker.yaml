@@ -32,9 +32,3 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: ghcr.io/lannonbr/jeff-bot:${{ github.ref_name }}
-      - name: Prune old images
-        uses: lannonbr/prune-containers-action@1.0.1
-        with:
-          container-name: jeff-bot
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
