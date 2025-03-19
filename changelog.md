@@ -1,3 +1,7 @@
+# 1.1.0 - Mar 19, 2025
+
+- feat: next issue command
+
 # 1.0.2 - Feb 24, 2025
 
 - refactor: tweak embed to not include fields if not found in API
