@@ -1,3 +1,7 @@
+# 1.1.1 - Mar 23, 2025
+
+- feat: added autocomplete to remove_series command
+
 # 1.1.0 - Mar 19, 2025
 
 - feat: next issue command

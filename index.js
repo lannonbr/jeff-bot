@@ -127,6 +127,7 @@ client.on("ready", async () => {
           description: "The ID of the series to remove",
           type: ApplicationCommandOptionType.String,
           required: true,
+          autocomplete: true,
         },
       ],
     });
@@ -156,7 +157,10 @@ function generateActionRow(backDisabled, forwardDisabled, pageNum, numComics) {
 
 client.on("interactionCreate", async (interaction) => {
   if (interaction.type == InteractionType.ApplicationCommandAutocomplete) {
-    if (interaction.commandName == "next_issue") {
+    if (
+      interaction.commandName == "next_issue" ||
+      interaction.commandName == "remove_series"
+    ) {
       const focusedValue = interaction.options.getFocused();
       const choices = series;
       const filtered = choices.filter((choice) =>
