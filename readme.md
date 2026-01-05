@@ -1,3 +1,7 @@
+# Notice: Deprecated
+
+I am not continuing development on this app given the Marvel Comic API was shutdown by Marvel without any notice and I have not found a suitable replacement for it, so I will leave this repo as is. Feel free to fork it if you are interested in continuing this on.
+
 # Jeffbot
 
 A discord bot that uses the [Marvel Comic API](https://developer.marvel.com/) to notify upon upcoming releases of comic books.
